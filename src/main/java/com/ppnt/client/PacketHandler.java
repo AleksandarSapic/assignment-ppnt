@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledExecutorService;
@@ -38,20 +39,20 @@ public class PacketHandler {
     public void handleIncomingPackets(InputStream in) throws IOException {
         byte[] header = new byte[HEADER_SIZE];
         in.read(header);
-        ByteBuffer headerBuffer = ByteBuffer.wrap(header);
+        ByteBuffer headerBuffer = ByteBuffer.wrap(header).order(ByteOrder.LITTLE_ENDIAN);
 
         int packetId = headerBuffer.getInt();
         int length = headerBuffer.getInt();
 
         byte[] body = new byte[length - HEADER_SIZE];
         in.read(body);
-        ByteBuffer bodyBuffer = ByteBuffer.wrap(body);
+        ByteBuffer bodyBuffer = ByteBuffer.wrap(body).order(ByteOrder.LITTLE_ENDIAN);
 
         int packetUniqueId = bodyBuffer.getInt();
         if (packetId == DUMMY_PACKET_ID) {
             int delay = bodyBuffer.getInt();
             Packet dummy = new Packet(packetUniqueId, delay, System.currentTimeMillis());
-            System.out.println("Dodavanje dummy paketa " + packetUniqueId);
+            System.out.println("Dodavanje dummy paketa " + packetUniqueId + "sa delay: " + delay);
             receivedPackets.put(dummy.getId(), dummy);
 
             ScheduledFuture<?> future = scheduleSendingPacketBack(dummy);
