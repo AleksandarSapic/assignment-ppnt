@@ -12,25 +12,48 @@ public class Client {
     private static final String SERVER_ADDRESS = "hermes.plusplus.rs";
     private static final int SERVER_PORT = 4000;
 
-    private final Socket socket;
-    private final InputStream in;
-    private final OutputStream out;
-    private final ScheduledExecutorService scheduler;
-    private final PacketHandler packetHandler;
-    private final FileManager fileManager;
+    private static final int MAX_ATTEMPTS = 5;
+    private static final long RETRY_DELAY = 00;
+
+    private Socket socket;
+    private InputStream in;
+    private OutputStream out;
+    private ScheduledExecutorService scheduler;
+    private PacketHandler packetHandler;
+    private FileManager fileManager;
 
     public Client() {
-        try {
-            socket = new Socket(SERVER_ADDRESS, SERVER_PORT);
-            in = socket.getInputStream();
-            out = socket.getOutputStream();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        boolean connected = false;
+        int attempts = 0;
 
-        scheduler = Executors.newScheduledThreadPool(1);
-        packetHandler = new PacketHandler(in, out, scheduler);
-        fileManager = new FileManager(packetHandler);
+        while (!connected && attempts < MAX_ATTEMPTS) {
+            try {
+                socket = new Socket(SERVER_ADDRESS, SERVER_PORT);
+                in = socket.getInputStream();
+                out = socket.getOutputStream();
+
+                scheduler = Executors.newScheduledThreadPool(1);
+                packetHandler = new PacketHandler(in, out, scheduler);
+                fileManager = new FileManager(packetHandler);
+
+                connected = true;
+            } catch (IOException e) {
+                attempts++;
+                System.err.println("Neuspelo povezivanje. Pokusaj broj: " + attempts);
+
+                if (attempts < MAX_ATTEMPTS) {
+                    try {
+                        Thread.sleep(RETRY_DELAY);
+                    } catch (InterruptedException ex) {
+                        Thread.currentThread().interrupt();
+                        throw new RuntimeException("Povezivanje prekinuto.", ex);
+                    }
+                } else {
+                    System.err.println("Povezivanje nije uspelo nakon " + MAX_ATTEMPTS + " pokušaja.");
+                    throw new RuntimeException("Neuspešno povezivanje sa serverom.", e);
+                }
+            }
+        }
     }
 
     public void start() {
