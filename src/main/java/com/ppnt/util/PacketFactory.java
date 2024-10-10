@@ -10,20 +10,20 @@ public class PacketFactory {
     private static final int CANCEL_PACKET_SIZE = 12;
 
 
-    public static byte[] createDummyPacket(int packetUniqueId, int delay) {
+    public static byte[] createDummyPacket(long packetUniqueId, int delay) {
         ByteBuffer buffer = ByteBuffer.allocate(DUMMY_PACKET_SIZE);
         buffer.putInt(DUMMY_PACKET_ID);
         buffer.putInt(DUMMY_PACKET_SIZE);
-        buffer.putInt(packetUniqueId);
+        buffer.put(NumberConvertor.convertToByteArray(packetUniqueId));
         buffer.putInt(delay);
         return buffer.array();
     }
 
-    public static byte[] createCancelPacket(int packetUniqueId) {
+    public static byte[] createCancelPacket(long packetUniqueId) {
         ByteBuffer buffer = ByteBuffer.allocate(CANCEL_PACKET_SIZE);
         buffer.putInt(CANCEL_PACKET_ID);
         buffer.putInt(CANCEL_PACKET_SIZE);
-        buffer.putInt(packetUniqueId);
+        buffer.put(NumberConvertor.convertToByteArray(packetUniqueId));
         return buffer.array();
     }
 }

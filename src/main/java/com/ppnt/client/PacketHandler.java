@@ -19,8 +19,8 @@ public class PacketHandler {
     private static final int CANCEL_PACKET_ID = 2;
     private static final int HEADER_SIZE = 8;
 
-    private final Map<Integer, Packet> receivedPackets = new ConcurrentHashMap<>();
-    private final Map<Integer, ScheduledFuture<?>> scheduledFutures = new ConcurrentHashMap<>();
+    private final Map<Long, Packet> receivedPackets = new ConcurrentHashMap<>();
+    private final Map<Long, ScheduledFuture<?>> scheduledFutures = new ConcurrentHashMap<>();
 
     private final InputStream in;
     private final OutputStream out;
@@ -32,7 +32,7 @@ public class PacketHandler {
         this.scheduler = scheduler;
     }
 
-    public Map<Integer, Packet> getReceivedPackets() {
+    public Map<Long, Packet> getReceivedPackets() {
         return receivedPackets;
     }
 
@@ -48,7 +48,7 @@ public class PacketHandler {
         in.read(body);
         ByteBuffer bodyBuffer = ByteBuffer.wrap(body).order(ByteOrder.LITTLE_ENDIAN);
 
-        int packetUniqueId = bodyBuffer.getInt();
+        long packetUniqueId = bodyBuffer.getInt() & 0xFFFFFFFFL;
         if (packetId == DUMMY_PACKET_ID) {
             int delay = bodyBuffer.getInt();
             Packet dummy = new Packet(packetUniqueId, delay, System.currentTimeMillis());
@@ -83,7 +83,7 @@ public class PacketHandler {
         }, packet.getDelay(), TimeUnit.SECONDS);
     }
 
-    private void sendCancelPacket(int packetUniqueId) throws IOException {
+    private void sendCancelPacket(long packetUniqueId) throws IOException {
         byte[] cancelPacket = PacketFactory.createCancelPacket(packetUniqueId);
 
         out.write(cancelPacket);

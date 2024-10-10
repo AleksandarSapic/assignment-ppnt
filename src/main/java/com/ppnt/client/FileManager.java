@@ -12,7 +12,7 @@ public class FileManager {
         this.packetHandler = packetHandler;
     }
 
-    public static void savePacketsToFile(Map<Integer, Packet> receivedPackets) {
+    public static void savePacketsToFile(Map<Long, Packet> receivedPackets) {
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(SAVED_PACKETS_FILE))) {
             oos.writeObject(receivedPackets);
         } catch (IOException e) {
@@ -24,7 +24,7 @@ public class FileManager {
         File file = new File(SAVED_PACKETS_FILE);
         if (file.exists()) {
             try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
-                Map<Integer, Packet> packets = (Map<Integer, Packet>) ois.readObject();
+                Map<Long, Packet> packets = (Map<Long, Packet>) ois.readObject();
                 packetHandler.getReceivedPackets().putAll(packets);
                 System.out.println("Paketi uspešno učitani.");
                 file.delete();
